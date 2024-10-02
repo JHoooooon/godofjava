@@ -670,4 +670,186 @@ Created block2
 2
 ```
 
+## Pass by value, Pass by reference
+
+이건, `Java` 에서 제공하는 메서드가 아닌, 메서드에 `value` 를 전달했을때, `reference value` 를 넘겼을때
+차이점을 알기위해서 존재하는 장이다.
+
+간단하다. `method` 내에 함수를 호출할때, `parameters`에 전달된 값이 `Primitive value` 이고,
+그 값을 변경한다면, 해당값이 외부 `method` 에 영향을 받는가? 
+
+이는 `javascript` 처럼 처리되므로, `Primitive value` 값을 전달하면 `Parameters` 역시 `Local variables`
+이므로 해당 내부 함수내에서만 적용된다.
+
+```js
+function inner(primitiveValue) {
+    primitiveValue = 2;
+    console.log(primitiveValue); // 2
+}
+
+function func () {
+    let primitiveValue = 1;
+    inner(primitiveValue);
+    console.log(primitiveValue); // 1
+}
+
+func();
+```
+
+이것과 비슷하게 작동한다.
+
+```java
+class ReferencePass {
+    public static void main(String[] args) {
+        ReferencePass ref = new ReferencePass();
+        ref.callPassByValue();
+    }
+
+    public void callPassByValue() {
+        int a = 10;
+        String b = "b";
+
+        System.out.println(a); // 10
+        System.out.println(b); // "b"
+
+        passByValue();
+
+        System.out.println(a); // 10
+        System.out.println(b); // "b"
+    }
+
+    public void passByValue(int a, String b) {
+        a = 20;
+        b = "z";
+
+        System.out.println(a); // 20
+        System.out.println(b); // "z"
+    }
+}
+
+```
+
+```sh
+$ javac ReferencePass.java; java ReferencePass;
+
+10
+b
+20
+z
+10
+b
+```
+
+이를 보면, 전달된 값이 변경되지는 않는다.
+반면 `reference type` 같은경우는 참조값이므로, 값이 변경된다.
+
+```java
+class ReferencePass {
+    public static void main(String[] args) {
+        ReferencePass ref = new ReferencePass();
+        ref.callPassByValue();
+    }
+
+    public void callPassByValue() {
+        int a = 10;
+        String b = "b";
+        MemberDTO member = new MemberDTO("JH");
+
+        System.out.println(a); // 10
+        System.out.println(b); // "b"
+        System.out.println(member.name); // "JH"
+
+        passByValue(a, b);
+        passByReference(member);
+
+        System.out.println(a); // 10
+        System.out.println(b); // "b"
+        System.out.println(member.name); // "JH2"
+    }
+
+    public void passByValue(int a, String b) {
+        a = 20;
+        b = "z";
+
+        System.out.println(a); // 20
+        System.out.println(b); // "z"
+    }
+
+  public void passByReference(MemberDTO memeber) {
+    memeber.name = "JH2";
+
+    System.out.println(memeber.name); // "JH2"
+  }
+}
+```
+
+`passByReference` 를 추가하고 호출한다.
+이는 `MemberDTO` 타입은 `member` 를 받아 처리한다.
+
+다음은 출력이다.
+
+```sh
+$ javac ReferencePass.java; java ReferencePass;
+
+10
+b
+JH
+20
+z
+JH2
+10
+b
+JH2
+
+```
+
+이를 보면 `PrimitiveValue` 를 사용할때와는 다르게 값이 변경된것을 볼수있다.
+참조값으로써 값이 변경되기 때문이다.
+
+## 매개변수를 지정하는 특이한 방법
+
+이는 `javascript` 의 `spread` 문법과 비슷하다.
+보통 여러개의 `Parameters` 를 받기 위한 방법은, 배열을 사용하는 방법이다.
+
+하지만, 이러한 배열을 더 쉽게 선언해서 연속으로 `Parameters` 를 받도록 할수 있다.
+
+```java
+public class MethodVarargs {
+    public static void main(String [] args) {
+        MethodVarargs vavargs = new MethodVarargs();
+        vavargs.calcuateNumbersWithArray(new int[] {1, 2, 3, 4, 5});
+        vavargs.calcuateNumbers(1, 2, 3, 4, 5);
+    }
+
+    public void calcuateNumbersWithArray(int [] numbers) {}
+    public void calcuateNumbers(int ...numbers) {
+        int total = 0;
+
+        for (int number:numbers) {
+            total += number;
+        }
+
+        System.out.println(total); // 15
+    }
+}
+
+```
+
+`...` 을 통해서 더 쉽게 값을 받아 처리할수있다.
+이는 `Java` 에서의 고정된 배열을 넘겨주는것보다, 동적으로 `Parameters` 를 받아 처리하기에
+더 용이하다.
+
+이를 사용할때 다음의 주의점이 있다.
+
+> 사실 `javascript` 의 주의점과 같다...
+
+```java
+public void arbitary(int ... numbers, String message) {} // Error
+public void arbitary(String message, int ... numbers) {} // 제대로 됨
+```
+
+이를 보면 명확히 알수 있다.
+고정적으로 사용되는 매개변수를 같이 사용할때는, 해당 매개변수를 먼저 선언하고,
+그다음에 `...` 을 사용한 매개변수를 넣어주어야 한다.
+
 
